@@ -20,7 +20,6 @@ print(f"Loading word model...", end='')
 french_model = KeyedVectors.load_word2vec_format(models[0], binary=False, encoding='utf-8', unicode_errors='ignore')
 print(f"done!")
 
-
 # We're gonna use "similar" term for semantic and "close" for levestein distance
 def get_similar_words_singular_input(input_word:List[str], negative_words:List[str] = None, top_n:int=100) -> List[str]:
     """
