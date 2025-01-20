@@ -173,6 +173,7 @@ def cemantix_random_script(instance:int, stop_event:Event):
         
 class CemantixRandomSolver:
     def __init__(self, instance:int, lang_usable_words:str = "liste_francais_maculins_utf8.txt"):
+        if instance < 1: instance = 1
         self.instance = instance
         self.lang_usable_words = lang_usable_words
         self.close_words_txt = f"close_words/close_words_{self.instance}.txt"

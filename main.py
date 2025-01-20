@@ -3,7 +3,7 @@ from c_random import CemantixRandomSolver
 from c_smart import CemantixSmartSolver # loading the FastText French model takes a while (~200s), consider runing this with an anaconda gpu venv
 
 def main(thread_count = 3, verbose = 2):
-    if thread_count < 2: thread_count = 2
+    if thread_count < 1: thread_count = 1
     results = []
     stop_event = threading.Event()
     quit_event = threading.Event()
@@ -22,4 +22,4 @@ def main(thread_count = 3, verbose = 2):
     return results
 
 if __name__ == "__main__":
-    main(3,2)
+    main(1,2)

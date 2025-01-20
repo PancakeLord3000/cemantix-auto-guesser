@@ -5,4 +5,4 @@ The code uses a bunch of random scripts to get score of a lot of words. A single
 This setup only supports the use of a single smart script.
 It is recommended to run this code on a venv that uses a gpu to load the model faster.
 
-This git does not contain the .vec file for the french text model. That file needs to be downloded and also configured in the c_smart file.
+This git does not contain the .vec file for the french text model. That file needs to be downloded and also configured in the c_smart file. The guessable words are found in "cemantix_words_rough.txt", this file was made automatically to only include the words that can be guesses in cemantix, thus it's not perfect.
