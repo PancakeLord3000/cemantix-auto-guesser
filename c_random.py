@@ -7,171 +7,20 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
-
-def get_words(lang_usable_words:str = "liste_francais_maculins_utf8.txt"):
-    """
-    Gets words from file and randomizes the list
-    """
-    with open(lang_usable_words, 'r', encoding='utf-8') as file:
-        words = file.read().splitlines()
-    random.shuffle(words)
-    return words
-
-def cemantix_random_script(instance:int, stop_event:Event):
-    """
-    """
-    close_words_txt = f"close_words/close_words_{instance}.txt"
-    if not os.path.exists(close_words_txt):
-        with open(close_words_txt, "w") as file:
-            file.write("\n")
-    far_words_txt = f"far_words/far_words_{instance}.txt"
-    if not os.path.exists(far_words_txt):
-        with open(far_words_txt, "w") as file:
-            file.write("\n")
-
-    # Set up Firefox driver
-    driver = webdriver.Firefox()
-    driver.maximize_window()
-
-    time.sleep(0.5)#precaution
-    url = "https://cemantix.certitudes.org/"
-    driver.get(url)
-
-    # Wait for the input field to be present
-    wait = WebDriverWait(driver, 10)
-    input_field = wait.until(EC.presence_of_element_located((By.ID, "cemantix-guess")))
-
-    # Load dictionnary
-    words = get_words()
-
-    # This creates the table contesxt so we can find it
-    input_field.clear()
-    input_field.send_keys("oh")
-    input_field.send_keys(Keys.RETURN)
-    input_field.clear()
-    input_field.send_keys("ah")
-    input_field.send_keys(Keys.RETURN)
-
-    # Find the table and tbody elements
-    table = driver.find_element(By.ID, "cemantix-guessable")
-    tbody = table.find_element(By.ID, "cemantix-guesses")
-
-    # Loop indefinitely and enter words randomly
-    try_count = 0
-    found_success = False
-    close_words_write = []
-    far_words_write = []
-    while True:
-        # Select a random word
-        try:word = words.pop(0)
-        except Exception as e:
-            if len(words)==0:
-                words = get_words()
-                word = words.pop(0)
-            else:
-                print(f"Exception {type(e)} found : {e}")
-                break
-            
-        # Insert next word
-        input_field.clear()
-        input_field.send_keys(word)
-        input_field.send_keys(Keys.RETURN)
-
-        try_count+=1
-        # Get best and worst words
-        if try_count % 100 == 0:
-            try:# elements can gos tale due to context changes
-                close_words = []
-                far_words = []
-                rows = tbody.find_elements(By.TAG_NAME, "tr")
-                for row in rows:
-                    if "separator" not in row.get_attribute("class"):
-                        try:
-                            # Check for "td.word.close" and "td.number.close"
-                            word_cell = row.find_element(By.CSS_SELECTOR, "td.word.close")
-                            number_cell = row.find_element(By.CSS_SELECTOR, "td.number.close")
-                            close_words.append((word_cell.text, number_cell.text))
-
-                            # If we have 100 words, stop adding to close_words
-                            if len(close_words) == 100:
-                                break
-                        except:
-                            # No 'td.word.close' or 'td.number.close' element found in this row, skip to next row
-                            pass
-
-                        try:
-                            # Check for two "td.number" cells
-                            number_cells = row.find_elements(By.CSS_SELECTOR, "td.number")
-                            if len(number_cells) >= 2:
-                                # The second "td.number" might be negative
-                                # print(f"{number_cells[1].text}")
-                                second_number = float(number_cells[1].text)
-                                if second_number < 0 and len(far_words) < 100:
-                                    # Get the corresponding "td.word" value for the second number
-                                    word_cell = row.find_element(By.CSS_SELECTOR, "td.word")
-                                    far_words.append((word_cell.text, second_number))
-                        except:
-                            # If there is an error with the second "td.number" or "td.word", skip to next row
-                            pass
-                close_words_write = list(close_words)
-                far_words_write = list(far_words)
-            except Exception as e:
-                # print(f"Random: {e}")
-                # Table or tbody element not found
-                pass
-            
-            with open(close_words_txt, 'w', encoding='utf-8') as file:
-                for word in close_words_write:
-                    file.write(f"{word[0]}:{word[1]}\n")
-            
-            with open(far_words_txt, 'w', encoding='utf-8') as file:
-                for word in far_words_write:
-                    file.write(f"{word[0]}:{word[1]}\n")
-
-        # Check for success message every 100 tries
-        if try_count % 100 == 0:
-            success_element = driver.find_elements(By.ID, "cemantix-success")
-            style = success_element[0].get_attribute("style")
-            if style == "opacity: 1; max-height: 100%; margin-bottom: 0.25em; display: block;":
-                found_success = True
-
-        if found_success:
-            # Write the winnign guess to the file
-            # TODO: maybe try writing the winning guess to every close_words_txt file in close_words
-            while True:
-                try:
-                    # Find the table and tbody elements
-                    table = driver.find_element(By.ID, "cemantix-guessable")
-                    tbody = table.find_element(By.ID, "cemantix-guesses")
-
-                    # Find the first three <tr> elements (excluding the separator)
-                    rows = tbody.find_elements(By.TAG_NAME, "tr")
-                    close_words = []
-                    for row in rows:
-                        if "separator" not in row.get_attribute("class"):
-                            word_cell = row.find_element(By.CSS_SELECTOR, "td.word.close")
-                            number_cell = row.find_element(By.CSS_SELECTOR, "td.number.close")
-                            close_words.append((word_cell.text, number_cell.text))
-                            if len(close_words) == 10:
-                                break
-                    close_words_write = list(close_words)
-                    
-                    with open(close_words_txt, 'w', encoding='utf-8') as file:
-                        for word in close_words_write:
-                            file.write(f"{word[0]}:{word[1]}\n")
-                            
-                except:pass
-                time.sleep(5)
-                if stop_event.is_set():
-                    driver.quit()
-                    return
-            
-        if stop_event.is_set():
-            driver.quit()
-            return
-        
-        
+       
 class CemantixRandomSolver:
+    """
+    Class for a random cemantix solver.
+
+    Description:
+    The CemantixRandomSolver class manages the random insertion of words into a cemantix and the
+    saving of the most useful words found.
+
+    Arguments:
+    instance (int): Instance number, determines where the class saves useful words.
+    lang_usable_words (str): Path to the file containing the words to insert in cemantix.
+    """
+
     def __init__(self, instance:int, lang_usable_words:str = "liste_francais_maculins_utf8.txt"):
         if instance < 1: instance = 1
         self.instance = instance

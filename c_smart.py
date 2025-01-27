@@ -22,6 +22,19 @@ print(f"done!")
 
 
 class CemantixSmartSolver:
+    """
+    Class for a "smart" cemantix solver.
+
+    Description:
+    The CemantixSmartSolver class uses all the information gained by the random solvers to try to deduce
+    the word of the day by appormating the semantic scores thanks to a model.
+
+    Arguments:
+    smart_words_file (str): Path to the file to save used words.
+    close_words_file (str): Path to the file to save useful words.
+    verbose (int): Verbose argument, 0=nothing, 1=success message, 2=every word.
+    """
+
     def __init__(self, smart_words_file="smart_words/smart_words.txt", close_words_file="close_words/close_words_0.txt", verbose: int=1):
         self.smart_words_file = smart_words_file
         self.close_words_file = close_words_file
@@ -33,7 +46,6 @@ class CemantixSmartSolver:
         self._init_files()
 
     def _init_files(self):
-        # this resets the files and creates them if they are missing
         with open(self.smart_words_file, "w") as file:
             file.write("\n")
         with open(self.close_words_file, "w") as file:
